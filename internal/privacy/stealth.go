@@ -3,8 +3,8 @@ package privacy
 import (
 	"crypto/ecdsa"
 	"crypto/rand"
-	"crypto/sha256"
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/prikshit/chameleon-privacy-module/internal/sanctions"
@@ -44,6 +44,7 @@ func (pm *PrivacyManager) GenerateStealthAddress(pubKey *ecdsa.PublicKey) (*ecds
 
 	// Convert shared secret into scalar value
 	s := new(big.Int).SetBytes(sharedSecret)
+	fmt.Println("Shared Secret from Generation (s):", s.Text(16))
 
 	// Compute stealth public key: P_s = P_r + s * G
 	sGx, sGy := pubKey.Curve.ScalarBaseMult(s.Bytes())                         // s * G
@@ -62,23 +63,33 @@ func (pm *PrivacyManager) GenerateStealthAddress(pubKey *ecdsa.PublicKey) (*ecds
 // GenerateSharedSecret generates a shared secret using the recipient's private key and ephemeral public key.
 func (pm *PrivacyManager) GenerateSharedSecret(privKey *ecdsa.PrivateKey, ephemeralPub *ecdsa.PublicKey) ([]byte, error) {
 	// Perform ECDH: Shared secret = ephemeralPub * privKey
-	x, _ := ephemeralPub.ScalarMult(ephemeralPub.X, ephemeralPub.Y, privKey.D.Bytes())
-	secret := sha256.Sum256(x.Bytes())
-	return secret[:], nil
+	sharedX, _ := privKey.Curve.ScalarMult(ephemeralPub.X, ephemeralPub.Y, privKey.D.Bytes())
+	sharedSecret := crypto.Keccak256(sharedX.Bytes()) // Hash for randomness
+
+	return sharedSecret, nil
 }
 
 // RecoverStealthPrivateKey recovers the recipient's stealth private key using their original private key and the ephemeral public key.
 func (pm *PrivacyManager) RecoverStealthPrivateKey(recipientPriv *ecdsa.PrivateKey, ephemeralPub *ecdsa.PublicKey) (*ecdsa.PrivateKey, error) {
 	// Compute shared secret: s = H(d_r * P_e)
-	sharedX, _ := recipientPriv.Curve.ScalarMult(ephemeralPub.X, ephemeralPub.Y, recipientPriv.D.Bytes())
-	sharedSecret := crypto.Keccak256(sharedX.Bytes()) // Hash for randomness
+	sharedSecret, err := pm.GenerateSharedSecret(recipientPriv, ephemeralPub)
+	if err != nil {
+		return nil, err
+	}
 
 	// Convert shared secret into scalar value
 	s := new(big.Int).SetBytes(sharedSecret)
 
+	// Debug: Log values to verify correctness
+	fmt.Println("Recipient Private Key (d_r):", recipientPriv.D.Text(16))
+	fmt.Println("Shared Secret from Recovery (s):", s.Text(16))
+
 	// Compute stealth private key: d_s = d_r + s mod n
 	stealthPrivKey := new(big.Int).Add(recipientPriv.D, s)
 	stealthPrivKey.Mod(stealthPrivKey, recipientPriv.Curve.Params().N) // Modulo to keep it in range
+
+	// Debug: Verify stealth private key
+	fmt.Println("Recovered Stealth Private Key (d_s):", stealthPrivKey.Text(16))
 
 	return &ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{

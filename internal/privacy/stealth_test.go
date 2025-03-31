@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"fmt"
-	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -79,12 +78,15 @@ func TestRecoverStealthPrivateKey(t *testing.T) {
 	// Generate recipient's key pair
 	recipientPrivKey, err := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
 	assert.NoError(t, err)
+	// Convert Private Keys to Hex
+	recipientPrivHex := fmt.Sprintf("0x%x", recipientPrivKey.D)
+	fmt.Println("recipientPrivKey: ", recipientPrivHex)
 
 	// Generate a stealth address using recipient's public key
 	stealthPub, ephemeralPrivKey, err := pm.GenerateStealthAddress(&recipientPrivKey.PublicKey)
 	// Convert Private Keys to Hex
 	stealthPrivHex := fmt.Sprintf("0x%x", ephemeralPrivKey.D)
-	fmt.Println("ephemeralPrivKey: ", stealthPrivHex)
+	fmt.Println("ephemeralPrivKey from Test: ", stealthPrivHex)
 	assert.NoError(t, err)
 	assert.NotNil(t, stealthPub)
 	assert.NotNil(t, ephemeralPrivKey)
@@ -97,16 +99,21 @@ func TestRecoverStealthPrivateKey(t *testing.T) {
 	recoveredPrivHex := fmt.Sprintf("0x%x", recoveredPrivKey.D)
 	fmt.Println("ephemeralPrivKey: ", recoveredPrivHex)
 
+	// Validate recovered private key matches expected stealth key
+	expectedStealthPub := &recoveredPrivKey.PublicKey
+	assert.Equal(t, stealthPub.X, expectedStealthPub.X, "Recovered X-coord mismatch")
+	assert.Equal(t, stealthPub.Y, expectedStealthPub.Y, "Recovered Y-coord mismatch")
+
 	// Compute the expected stealth private key: d_s = d_r + s mod n
-	sharedX, _ := recipientPrivKey.Curve.ScalarMult(ephemeralPrivKey.PublicKey.X, ephemeralPrivKey.PublicKey.Y, recipientPrivKey.D.Bytes())
-	sharedSecret := crypto.Keccak256(sharedX.Bytes()) // Hash for randomness
-	s := new(big.Int).SetBytes(sharedSecret)
+	// sharedX, _ := recipientPrivKey.Curve.ScalarMult(ephemeralPrivKey.PublicKey.X, ephemeralPrivKey.PublicKey.Y, recipientPrivKey.D.Bytes())
+	// sharedSecret := crypto.Keccak256(sharedX.Bytes()) // Hash for randomness
+	// s := new(big.Int).SetBytes(sharedSecret)
 
-	expectedPrivKey := new(big.Int).Add(recipientPrivKey.D, s)
-	expectedPrivKey.Mod(expectedPrivKey, recipientPrivKey.Curve.Params().N)
+	// expectedPrivKey := new(big.Int).Add(recipientPrivKey.D, s)
+	// expectedPrivKey.Mod(expectedPrivKey, recipientPrivKey.Curve.Params().N)
 
-	// Validate that the recovered private key matches expected
-	assert.Equal(t, expectedPrivKey, recoveredPrivKey.D, "Recovered stealth private key should match expected value.")
+	// // Validate that the recovered private key matches expected
+	// assert.Equal(t, expectedPrivKey, recoveredPrivKey.D, "Recovered stealth private key should match expected value.")
 }
 
 func TestSanctionedAddress(t *testing.T) {
