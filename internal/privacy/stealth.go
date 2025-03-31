@@ -32,22 +32,30 @@ func (pm *PrivacyManager) GenerateStealthAddress(pubKey *ecdsa.PublicKey) (*ecds
 		return nil, nil, ErrSanctionedAddress
 	}
 
-	// Generate a random ephemeral key
+	// Generate ephemeral keypair
 	ephemeralPrivKey, err := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Calculate the stealth address using ECDH (Elliptic Curve Diffie-Hellman)
-	tempX, tempY := crypto.S256().Add(pubKey.X, pubKey.Y, ephemeralPrivKey.PublicKey.X, ephemeralPrivKey.PublicKey.Y)
+	// Compute shared secret: s = H(d_e * P_r)
+	sharedX, _ := pubKey.Curve.ScalarMult(pubKey.X, pubKey.Y, ephemeralPrivKey.D.Bytes())
+	sharedSecret := crypto.Keccak256(sharedX.Bytes()) // Hash for better randomness
+
+	// Convert shared secret into scalar value
+	s := new(big.Int).SetBytes(sharedSecret)
+
+	// Compute stealth public key: P_s = P_r + s * G
+	sGx, sGy := pubKey.Curve.ScalarBaseMult(s.Bytes())                         // s * G
+	stealthPubX, stealthPubY := pubKey.Curve.Add(pubKey.X, pubKey.Y, sGx, sGy) // P_s = P_r + s * G
 
 	stealthPub := &ecdsa.PublicKey{
 		Curve: crypto.S256(),
-		X:     tempX,
-		Y:     tempY,
+		X:     stealthPubX,
+		Y:     stealthPubY,
 	}
 
-	// Return both the generated stealth address and the ephemeral private key for recovery.
+	// Return stealth public key and ephemeral private key (needed for recipient to recover stealth private key)
 	return stealthPub, ephemeralPrivKey, nil
 }
 
@@ -61,28 +69,23 @@ func (pm *PrivacyManager) GenerateSharedSecret(privKey *ecdsa.PrivateKey, epheme
 
 // RecoverStealthPrivateKey recovers the recipient's stealth private key using their original private key and the ephemeral public key.
 func (pm *PrivacyManager) RecoverStealthPrivateKey(recipientPriv *ecdsa.PrivateKey, ephemeralPub *ecdsa.PublicKey) (*ecdsa.PrivateKey, error) {
-	// Derive the shared secret
-	sharedSecret, err := pm.GenerateSharedSecret(recipientPriv, ephemeralPub)
-	if err != nil {
-		return nil, err
-	}
+	// Compute shared secret: s = H(d_r * P_e)
+	sharedX, _ := recipientPriv.Curve.ScalarMult(ephemeralPub.X, ephemeralPub.Y, recipientPriv.D.Bytes())
+	sharedSecret := crypto.Keccak256(sharedX.Bytes()) // Hash for randomness
 
-	// Convert shared secret to a big.Int
-	sharedSecretInt := new(big.Int).SetBytes(sharedSecret)
+	// Convert shared secret into scalar value
+	s := new(big.Int).SetBytes(sharedSecret)
 
-	// Recover the stealth private key: stealthPriv = recipientPriv + sharedSecret
-	stealthPriv := new(big.Int).Add(recipientPriv.D, sharedSecretInt)
-	stealthPriv.Mod(stealthPriv, crypto.S256().Params().N)
+	// Compute stealth private key: d_s = d_r + s mod n
+	stealthPrivKey := new(big.Int).Add(recipientPriv.D, s)
+	stealthPrivKey.Mod(stealthPrivKey, recipientPriv.Curve.Params().N) // Modulo to keep it in range
 
-	// Create a new ECDSA private key
-	stealthPrivateKey := &ecdsa.PrivateKey{
+	return &ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{
-			Curve: crypto.S256(),
-			X:     ephemeralPub.X,
-			Y:     ephemeralPub.Y,
+			Curve: recipientPriv.Curve,
+			X:     recipientPriv.PublicKey.X,
+			Y:     recipientPriv.PublicKey.Y,
 		},
-		D: stealthPriv,
-	}
-
-	return stealthPrivateKey, nil
+		D: stealthPrivKey,
+	}, nil
 }

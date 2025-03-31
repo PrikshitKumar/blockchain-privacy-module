@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -79,20 +80,33 @@ func TestRecoverStealthPrivateKey(t *testing.T) {
 	recipientPrivKey, err := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
 	assert.NoError(t, err)
 
-	// Generate stealth key pair (simulating sender)
-	stealthPrivKey, err := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
-	assert.NoError(t, err)
-
-	// Generate a stealth address
-	stealthPub, _, err := pm.GenerateStealthAddress(&recipientPrivKey.PublicKey)
+	// Generate a stealth address using recipient's public key
+	stealthPub, ephemeralPrivKey, err := pm.GenerateStealthAddress(&recipientPrivKey.PublicKey)
+	// Convert Private Keys to Hex
+	stealthPrivHex := fmt.Sprintf("0x%x", ephemeralPrivKey.D)
+	fmt.Println("ephemeralPrivKey: ", stealthPrivHex)
 	assert.NoError(t, err)
 	assert.NotNil(t, stealthPub)
+	assert.NotNil(t, ephemeralPrivKey)
 
-	// Recover the stealth private key
-	recoveredPrivKey, err := pm.RecoverStealthPrivateKey(recipientPrivKey, &stealthPrivKey.PublicKey)
+	// Recover the stealth private key using recipient's private key and the ephemeral public key
+	recoveredPrivKey, err := pm.RecoverStealthPrivateKey(recipientPrivKey, &ephemeralPrivKey.PublicKey)
 	assert.NoError(t, err)
 	assert.NotNil(t, recoveredPrivKey)
-	assert.Equal(t, recipientPrivKey.D, recoveredPrivKey.D, "The recovered private key should match the original recipient private key.")
+
+	recoveredPrivHex := fmt.Sprintf("0x%x", recoveredPrivKey.D)
+	fmt.Println("ephemeralPrivKey: ", recoveredPrivHex)
+
+	// Compute the expected stealth private key: d_s = d_r + s mod n
+	sharedX, _ := recipientPrivKey.Curve.ScalarMult(ephemeralPrivKey.PublicKey.X, ephemeralPrivKey.PublicKey.Y, recipientPrivKey.D.Bytes())
+	sharedSecret := crypto.Keccak256(sharedX.Bytes()) // Hash for randomness
+	s := new(big.Int).SetBytes(sharedSecret)
+
+	expectedPrivKey := new(big.Int).Add(recipientPrivKey.D, s)
+	expectedPrivKey.Mod(expectedPrivKey, recipientPrivKey.Curve.Params().N)
+
+	// Validate that the recovered private key matches expected
+	assert.Equal(t, expectedPrivKey, recoveredPrivKey.D, "Recovered stealth private key should match expected value.")
 }
 
 func TestSanctionedAddress(t *testing.T) {
