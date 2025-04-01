@@ -4,13 +4,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"math/big"
-
-	"crypto/ecdsa"
-	"crypto/elliptic"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
+	"github.com/prikshit/chameleon-privacy-module/helpers"
 )
 
 func GenerateAccount(c *gin.Context) {
@@ -39,7 +36,7 @@ func GenerateAccount(c *gin.Context) {
 	pubKeyHex := fmt.Sprintf("0x%x", pubKeyBytes)
 
 	// Convert the public key bytes back to ecdsa.PublicKey
-	pubKey, err := parseECDSAPubKey(pubKeyHex)
+	pubKey, err := helpers.ParseECDSAPubKey(pubKeyHex)
 	if err != nil {
 		log.Printf("Error parsing public key: %v", err)
 		c.JSON(500, gin.H{"error": "Invalid public key format"})
@@ -57,34 +54,4 @@ func GenerateAccount(c *gin.Context) {
 		"address":           address.Hex(), // Ethereum address (Hex format)
 		"parsed_public_key": pubKey,
 	})
-}
-
-// Helper function to parse hex-encoded public key into *ecdsa.PublicKey
-func parseECDSAPubKey(hexKey string) (*ecdsa.PublicKey, error) {
-	// Remove "0x" prefix from the hex string
-	hexKey = hexKey[2:]
-
-	// Decode the hex string
-	pubKeyBytes, err := hex.DecodeString(hexKey)
-	if err != nil {
-		return nil, err
-	}
-
-	// Ensure the public key is in the uncompressed format (starting with 0x04)
-	if pubKeyBytes[0] != 0x04 {
-		return nil, fmt.Errorf("invalid uncompressed public key format")
-	}
-
-	// Extract the X and Y coordinates from the public key bytes
-	x := new(big.Int).SetBytes(pubKeyBytes[1:33])  // 32 bytes for X coordinate
-	y := new(big.Int).SetBytes(pubKeyBytes[33:65]) // 32 bytes for Y coordinate
-
-	// Create the ecdsa.PublicKey using the secp256k1 curve
-	pubKey := &ecdsa.PublicKey{
-		Curve: elliptic.P256(), // Use the elliptic.P256() curve for ECDSA (Ethereum uses secp256k1, but P256 for simplicity)
-		X:     x,
-		Y:     y,
-	}
-
-	return pubKey, nil
 }
