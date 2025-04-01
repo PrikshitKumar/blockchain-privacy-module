@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"errors"
-	"fmt"
 	"math/big"
 
 	"github.com/prikshit/chameleon-privacy-module/internal/sanctions"
@@ -44,7 +43,6 @@ func (pm *PrivacyManager) GenerateStealthAddress(pubKey *ecdsa.PublicKey) (*ecds
 
 	// Convert shared secret into scalar value
 	s := new(big.Int).SetBytes(sharedSecret)
-	fmt.Println("Shared Secret from Generation (s):", s.Text(16))
 
 	// Compute stealth public key: P_s = P_r + s * G
 	sGx, sGy := pubKey.Curve.ScalarBaseMult(s.Bytes())                         // s * G
@@ -80,16 +78,9 @@ func (pm *PrivacyManager) RecoverStealthPrivateKey(recipientPriv *ecdsa.PrivateK
 	// Convert shared secret into scalar value
 	s := new(big.Int).SetBytes(sharedSecret)
 
-	// Debug: Log values to verify correctness
-	fmt.Println("Recipient Private Key (d_r):", recipientPriv.D.Text(16))
-	fmt.Println("Shared Secret from Recovery (s):", s.Text(16))
-
 	// Compute stealth private key: d_s = (d_r + s) mod n
 	stealthPrivKey := new(big.Int).Add(recipientPriv.D, s)
 	stealthPrivKey.Mod(stealthPrivKey, recipientPriv.Curve.Params().N) // Modulo n to stay within valid range
-
-	// Debug: Verify stealth private key
-	fmt.Println("Recovered Stealth Private Key (d_s):", stealthPrivKey.Text(16))
 
 	// Recompute public key from stealth private key
 	stealthPubX, stealthPubY := recipientPriv.Curve.ScalarBaseMult(stealthPrivKey.Bytes()) // d_s * G
@@ -101,7 +92,7 @@ func (pm *PrivacyManager) RecoverStealthPrivateKey(recipientPriv *ecdsa.PrivateK
 
 	// Return stealth private key with corrected public key
 	return &ecdsa.PrivateKey{
-		PublicKey: *stealthPublicKey, // Must update the public key
+		PublicKey: *stealthPublicKey,
 		D:         stealthPrivKey,
 	}, nil
 }

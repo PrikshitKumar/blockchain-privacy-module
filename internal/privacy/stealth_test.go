@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -105,29 +106,25 @@ func TestRecoverStealthPrivateKey(t *testing.T) {
 	assert.Equal(t, stealthPub.X, expectedStealthPub.X, "Recovered X-coord mismatch")
 	assert.Equal(t, stealthPub.Y, expectedStealthPub.Y, "Recovered Y-coord mismatch")
 
-	// // Compute expected stealth private key using modular arithmetic
-	// curveN := recipientPrivKey.Curve.Params().N
-	// sharedSecret, _ := pm.GenerateSharedSecret(recipientPrivKey, &ephemeralPrivKey.PublicKey) // Ensure this function returns the correct shared secret as big.Int
-	// expectedPrivKey := new(big.Int).Add(recipientPrivKey.D, sharedSecret)
-	// expectedPrivKey.Mod(expectedPrivKey, curveN) // Apply modulo n
+	// Verify the algorithm used to recover the private Key is correct
+	// Compute expected stealth private key using modular arithmetic
+	curveN := recipientPrivKey.Curve.Params().N
+	sharedSecretBytes, err := pm.GenerateSharedSecret(recipientPrivKey, &ephemeralPrivKey.PublicKey)
+	assert.NoError(t, err)
 
-	// // Convert expected private key to Hex for debugging
-	// expectedPrivHex := fmt.Sprintf("0x%x", expectedPrivKey)
-	// fmt.Println("Expected Stealth Private Key (d_s):", expectedPrivHex)
+	// Convert shared secret from []byte to *big.Int
+	sharedSecret := new(big.Int).SetBytes(sharedSecretBytes)
+	sharedSecret.Mod(sharedSecret, curveN) // Ensure it's within valid range
 
-	// // Validate recovered private key matches expected stealth key modulo n
-	// assert.Equal(t, expectedPrivKey, recoveredPrivKey.D, "Recovered private key mismatch (mod n)")
+	expectedPrivKey := new(big.Int).Add(recipientPrivKey.D, sharedSecret)
+	expectedPrivKey.Mod(expectedPrivKey, curveN) // Apply modulo n
 
-	// Compute the expected stealth private key: d_s = d_r + s mod n
-	// sharedX, _ := recipientPrivKey.Curve.ScalarMult(ephemeralPrivKey.PublicKey.X, ephemeralPrivKey.PublicKey.Y, recipientPrivKey.D.Bytes())
-	// sharedSecret := crypto.Keccak256(sharedX.Bytes()) // Hash for randomness
-	// s := new(big.Int).SetBytes(sharedSecret)
+	// Convert expected private key to Hex for debugging
+	expectedPrivHex := fmt.Sprintf("0x%x", expectedPrivKey)
+	fmt.Println("Expected Stealth Private Key (d_s):", expectedPrivHex)
 
-	// expectedPrivKey := new(big.Int).Add(recipientPrivKey.D, s)
-	// expectedPrivKey.Mod(expectedPrivKey, recipientPrivKey.Curve.Params().N)
-
-	// // Validate that the recovered private key matches expected
-	// assert.Equal(t, expectedPrivKey, recoveredPrivKey.D, "Recovered stealth private key should match expected value.")
+	// Validate recovered private key matches expected stealth key modulo n
+	assert.Equal(t, expectedPrivKey, recoveredPrivKey.D, "Recovered private key mismatch (mod n)")
 }
 
 func TestSanctionedAddress(t *testing.T) {
