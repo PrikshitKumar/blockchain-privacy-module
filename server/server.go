@@ -27,6 +27,10 @@ func Start(s *models.Server) error {
 	})
 
 	r.GET("/generate-account", controller.GenerateAccount)
+
+	r.POST("/recover-stealth-priv-key", func(c *gin.Context) {
+		controller.RecoverStealthPrivKey(c, s)
+	})
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {

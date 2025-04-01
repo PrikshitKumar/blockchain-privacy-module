@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/hex"
 	"log"
 	"net/http"
 	"strings"
@@ -42,7 +43,7 @@ func GenerateStealthAccount(c *gin.Context, s *models.Server) {
 
 	// Return the generated keys as response
 	c.JSON(http.StatusOK, gin.H{
-		"stealth_pub_key":    crypto.PubkeyToAddress(*stealthPub).Hex(),
+		"stealth_pub_key":    hex.EncodeToString(crypto.FromECDSAPub(stealthPub)),
 		"ephemeral_priv_key": common.Bytes2Hex(crypto.FromECDSA(stealthPriv)),
 	})
 }
