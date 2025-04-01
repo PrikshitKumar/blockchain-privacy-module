@@ -84,19 +84,24 @@ func (pm *PrivacyManager) RecoverStealthPrivateKey(recipientPriv *ecdsa.PrivateK
 	fmt.Println("Recipient Private Key (d_r):", recipientPriv.D.Text(16))
 	fmt.Println("Shared Secret from Recovery (s):", s.Text(16))
 
-	// Compute stealth private key: d_s = d_r + s mod n
+	// Compute stealth private key: d_s = (d_r + s) mod n
 	stealthPrivKey := new(big.Int).Add(recipientPriv.D, s)
-	stealthPrivKey.Mod(stealthPrivKey, recipientPriv.Curve.Params().N) // Modulo to keep it in range
+	stealthPrivKey.Mod(stealthPrivKey, recipientPriv.Curve.Params().N) // Modulo n to stay within valid range
 
 	// Debug: Verify stealth private key
 	fmt.Println("Recovered Stealth Private Key (d_s):", stealthPrivKey.Text(16))
 
+	// Recompute public key from stealth private key
+	stealthPubX, stealthPubY := recipientPriv.Curve.ScalarBaseMult(stealthPrivKey.Bytes()) // d_s * G
+	stealthPublicKey := &ecdsa.PublicKey{
+		Curve: recipientPriv.Curve,
+		X:     stealthPubX,
+		Y:     stealthPubY,
+	}
+
+	// Return stealth private key with corrected public key
 	return &ecdsa.PrivateKey{
-		PublicKey: ecdsa.PublicKey{
-			Curve: recipientPriv.Curve,
-			X:     recipientPriv.PublicKey.X,
-			Y:     recipientPriv.PublicKey.Y,
-		},
-		D: stealthPrivKey,
+		PublicKey: *stealthPublicKey, // Must update the public key
+		D:         stealthPrivKey,
 	}, nil
 }
