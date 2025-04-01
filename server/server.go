@@ -19,11 +19,6 @@ func Start(s *models.Server) error {
 	r := gin.Default()
 
 	// Register routes and pass the Server instance
-	r.POST("/check-sanction", func(c *gin.Context) {
-		log.Println("Handling check sanction request")
-		controller.HandleCheckSanction(c, s)
-	})
-
 	r.POST("/generate-stealth", func(c *gin.Context) {
 		log.Println("Handling generate stealth account request")
 		controller.GenerateStealthAccount(c, s)
@@ -37,6 +32,22 @@ func Start(s *models.Server) error {
 		log.Println("Handling recover stealth private key request")
 		controller.RecoverStealthPrivKey(c, s)
 	})
+
+	r.POST("/sanctions/add", func(c *gin.Context) {
+		log.Println("Handling add sanction request")
+		controller.HandleAddSanctionedAddress(c, s)
+	})
+
+	r.POST("/sanctions/remove", func(c *gin.Context) {
+		log.Println("Handling add sanction request")
+		controller.HandleRemoveSanctionedAddress(c, s)
+	})
+
+	r.POST("/sanctions/check", func(c *gin.Context) {
+		log.Println("Handling add sanction request")
+		controller.HandleCheckSanction(c, s)
+	})
+
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
