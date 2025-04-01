@@ -2,9 +2,9 @@ package controller
 
 import (
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -12,17 +12,15 @@ import (
 	"github.com/prikshit/chameleon-privacy-module/models"
 )
 
+// Generates the Stealth Account (by Payer)
 func GenerateStealthAccount(c *gin.Context, s *models.Server) {
-	var req struct {
-		PubKeyHex string `json:"pub_key"`
-	}
+	var req models.GenerateStealthAccountRequest
 	// Bind JSON body to request struct
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	pubKeyHex := strings.ToLower(req.PubKeyHex)
-	if pubKeyHex == "" {
+	if req.PubKeyHex == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing pub_key"})
 		return
 	}
@@ -35,7 +33,7 @@ func GenerateStealthAccount(c *gin.Context, s *models.Server) {
 	}
 
 	// Generate stealth address and private key
-	stealthPub, stealthPriv, err := s.PrivacyManager.GenerateStealthAddress(pubKey)
+	stealthPub, ephemeralPriv, err := s.PrivacyManager.GenerateStealthAddress(pubKey)
 	if err != nil {
 		log.Printf("Error generating stealth address: %v", err)
 		return
@@ -43,7 +41,7 @@ func GenerateStealthAccount(c *gin.Context, s *models.Server) {
 
 	// Return the generated keys as response
 	c.JSON(http.StatusOK, gin.H{
-		"stealth_pub_key":    hex.EncodeToString(crypto.FromECDSAPub(stealthPub)),
-		"ephemeral_priv_key": common.Bytes2Hex(crypto.FromECDSA(stealthPriv)),
+		"stealth_pub_key":    "0x" + hex.EncodeToString(crypto.FromECDSAPub(stealthPub)),
+		"ephemeral_priv_key": "0x" + fmt.Sprintf("%064s", common.Bytes2Hex(crypto.FromECDSA(ephemeralPriv))),
 	})
 }

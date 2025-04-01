@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/hex"
+	"fmt"
 	"net/http"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -9,6 +10,7 @@ import (
 	"github.com/prikshit/chameleon-privacy-module/models"
 )
 
+// Recovers the Private Key which can regenarate the Public Key and Address (Created by Payer) (By Receipient)
 func RecoverStealthPrivKey(c *gin.Context, s *models.Server) {
 	var req models.RecoverPrivKeyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -48,7 +50,10 @@ func RecoverStealthPrivKey(c *gin.Context, s *models.Server) {
 	}
 
 	// Convert recovered private key to hex
-	// recoveredPrivHex := fmt.Sprintf("0x%x", recoveredPrivKey.D)
+	recoveredPrivHex := fmt.Sprintf("0x%x", recoveredPrivKey.D)
 
-	c.JSON(http.StatusOK, gin.H{"recovered_privkey": recoveredPrivKey})
+	c.JSON(http.StatusOK, gin.H{
+		"recovered_priv_key":     recoveredPrivKey,
+		"recovered_priv_key_hex": recoveredPrivHex,
+	})
 }

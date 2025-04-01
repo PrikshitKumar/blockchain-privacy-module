@@ -1,18 +1,20 @@
 package controller
 
 import (
+	"crypto/ecdsa"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"log"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
-	"github.com/prikshit/chameleon-privacy-module/helpers"
 )
 
+// Generate a new Account or Key pair
 func GenerateAccount(c *gin.Context) {
-	// Generate a new private key using secp256k1
-	privateKey, err := crypto.GenerateKey()
+	// Generate a new private key
+	privateKey, err := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
 	if err != nil {
 		log.Fatalf("Error generating private key: %v", err)
 		c.JSON(500, gin.H{"error": "Error generating private key"})
@@ -35,23 +37,11 @@ func GenerateAccount(c *gin.Context) {
 	// Convert the uncompressed public key to hex format
 	pubKeyHex := fmt.Sprintf("0x%x", pubKeyBytes)
 
-	// Convert the public key bytes back to ecdsa.PublicKey
-	pubKey, err := helpers.ParseECDSAPubKey(pubKeyHex)
-	if err != nil {
-		log.Printf("Error parsing public key: %v", err)
-		c.JSON(500, gin.H{"error": "Invalid public key format"})
-		return
-	}
-
-	// Now, you can pass the pubKey to GenerateStealthAddress or any other function expecting an *ecdsa.PublicKey
-	// Example: stealthAddress := pm.GenerateStealthAddress(pubKey)
-
-	// Return the private key, public key (uncompressed), and Ethereum address as a JSON response
+	// Return the private key, public key (uncompressed), publick key in ecdsa format and Ethereum address as a JSON response
 	c.JSON(200, gin.H{
-		"private_key":       privateKeyHex, // Private key in hexadecimal
-		"public_key":        pubKeyHex,     // Uncompressed public key (secp256k1)
-		"public_key_ecdsa":  publicKeyECDSA,
-		"address":           address.Hex(), // Ethereum address (Hex format)
-		"parsed_public_key": pubKey,
+		"private_key":      "0x" + privateKeyHex, // Private key in hexadecimal
+		"public_key":       pubKeyHex,            // Uncompressed public key (secp256k1)
+		"public_key_ecdsa": publicKeyECDSA,       // Public Key ECDSA
+		"address":          address.Hex(),        // Ethereum address (Hex format)
 	})
 }

@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"errors"
+	"log"
 	"math/big"
 
 	"github.com/prikshit/chameleon-privacy-module/internal/sanctions"
@@ -43,6 +44,7 @@ func (pm *PrivacyManager) GenerateStealthAddress(pubKey *ecdsa.PublicKey) (*ecds
 
 	// Convert shared secret into scalar value
 	s := new(big.Int).SetBytes(sharedSecret)
+	log.Println("Secret from Sender: ", s)
 
 	// Compute stealth public key: P_s = P_r + s * G
 	sGx, sGy := pubKey.Curve.ScalarBaseMult(s.Bytes())                         // s * G
@@ -77,6 +79,8 @@ func (pm *PrivacyManager) RecoverStealthPrivateKey(recipientPriv *ecdsa.PrivateK
 
 	// Convert shared secret into scalar value
 	s := new(big.Int).SetBytes(sharedSecret)
+
+	log.Println("Secret from Receiver while recover: ", s)
 
 	// Compute stealth private key: d_s = (d_r + s) mod n
 	stealthPrivKey := new(big.Int).Add(recipientPriv.D, s)

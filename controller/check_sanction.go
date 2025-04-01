@@ -5,6 +5,7 @@ import (
 	"github.com/prikshit/chameleon-privacy-module/models"
 )
 
+// Verifies the Sanctioned Addresses
 func HandleCheckSanction(c *gin.Context, s *models.Server) {
 	var req struct {
 		Address string `json:"address"`
