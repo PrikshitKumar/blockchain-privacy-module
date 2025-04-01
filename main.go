@@ -9,13 +9,25 @@ import (
 )
 
 func main() {
-	initialAddresses := []string{"0xAbc123...", "0xDef456..."}
-	detector := sanctions.NewDetector(initialAddresses)
-	privacyManager := privacy.NewPrivacyManager(detector)
-	s := server.NewServer(privacyManager)
+	// Initialize list of sanctioned addresses
+	initialAddresses := []string{"0xAbc123", "0xDef456"}
+	log.Printf("Initializing sanctions detector with %d initial addresses\n", len(initialAddresses))
 
-	log.Println("Server starting on port 8080...")
+	// Create sanctions detector and PrivacyManager
+	detector := sanctions.NewDetector(initialAddresses)
+	log.Println("Sanctions detector initialized")
+
+	privacyManager := privacy.NewPrivacyManager(detector)
+	log.Println("Privacy manager initialized")
+
+	// Initialize and start the server
+	s := server.NewServer(privacyManager)
+	log.Println("Server instance created")
+
+	log.Println("Server starting on port 8080")
 	if err := server.Start(s); err != nil {
-		log.Fatal(err)
+		log.Fatal("Error starting the server: ", err)
+	} else {
+		log.Println("Server started successfully")
 	}
 }

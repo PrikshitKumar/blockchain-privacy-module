@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"fmt"
+	"log"
 	"math/big"
 	"testing"
 
@@ -40,11 +41,11 @@ func TestGenerateStealthAddress(t *testing.T) {
 	stealthPubAddress := crypto.PubkeyToAddress(stealthPriv.PublicKey).Hex()
 
 	// Print the formatted keys
-	fmt.Println("Recipient Private Key:", recipientPrivHex)
-	fmt.Println("Recipient Public Address:", recipientPubAddress)
-	fmt.Println("Stealth Private Key:", stealthPrivHex)
-	fmt.Println("Stealth Public Address:", stealthPubAddress)
-	fmt.Println("Stealth Address:", stealthAddress)
+	log.Println("Recipient Private Key:", recipientPrivHex)
+	log.Println("Recipient Public Address:", recipientPubAddress)
+	log.Println("Stealth Private Key:", stealthPrivHex)
+	log.Println("Stealth Public Address:", stealthPubAddress)
+	log.Println("Stealth Address:", stealthAddress)
 }
 
 func TestGenerateSharedSecret(t *testing.T) {
@@ -69,7 +70,7 @@ func TestGenerateSharedSecret(t *testing.T) {
 	sharedSecretHex := fmt.Sprintf("%x", sharedSecret)
 
 	// Print formatted output
-	fmt.Println("Shared Secret:", sharedSecretHex)
+	log.Println("Shared Secret:", sharedSecretHex)
 }
 
 func TestRecoverStealthPrivateKey(t *testing.T) {
@@ -82,7 +83,7 @@ func TestRecoverStealthPrivateKey(t *testing.T) {
 
 	// Convert Private Keys to Hex
 	recipientPrivHex := fmt.Sprintf("0x%x", recipientPrivKey.D)
-	fmt.Println("recipientPrivKey: ", recipientPrivHex)
+	log.Println("recipientPrivKey: ", recipientPrivHex)
 
 	// Generate a stealth address using recipient's public key
 	stealthPub, ephemeralPrivKey, err := pm.GenerateStealthAddress(&recipientPrivKey.PublicKey)
@@ -91,7 +92,7 @@ func TestRecoverStealthPrivateKey(t *testing.T) {
 	assert.NotNil(t, ephemeralPrivKey)
 	// Convert Private Keys to Hex
 	stealthPrivHex := fmt.Sprintf("0x%x", ephemeralPrivKey.D)
-	fmt.Println("ephemeralPrivKey from Test: ", stealthPrivHex)
+	log.Println("ephemeralPrivKey from Test: ", stealthPrivHex)
 
 	// Recover the stealth private key using recipient's private key and the ephemeral public key
 	recoveredPrivKey, err := pm.RecoverStealthPrivateKey(recipientPrivKey, &ephemeralPrivKey.PublicKey)
@@ -99,7 +100,7 @@ func TestRecoverStealthPrivateKey(t *testing.T) {
 	assert.NotNil(t, recoveredPrivKey)
 
 	recoveredPrivHex := fmt.Sprintf("0x%x", recoveredPrivKey.D)
-	fmt.Println("Recovered PrivKey from Test: ", recoveredPrivHex)
+	log.Println("Recovered PrivKey from Test: ", recoveredPrivHex)
 
 	// Validate recovered private key matches expected stealth key
 	expectedStealthPub := &recoveredPrivKey.PublicKey
@@ -121,7 +122,7 @@ func TestRecoverStealthPrivateKey(t *testing.T) {
 
 	// Convert expected private key to Hex for debugging
 	expectedPrivHex := fmt.Sprintf("0x%x", expectedPrivKey)
-	fmt.Println("Expected Stealth Private Key (d_s):", expectedPrivHex)
+	log.Println("Expected Stealth Private Key (d_s):", expectedPrivHex)
 
 	// Validate recovered private key matches expected stealth key modulo n
 	assert.Equal(t, expectedPrivKey, recoveredPrivKey.D, "Recovered private key mismatch (mod n)")

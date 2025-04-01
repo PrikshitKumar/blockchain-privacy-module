@@ -11,6 +11,7 @@ import (
 )
 
 func NewServer(pm *privacy.PrivacyManager) *models.Server {
+	log.Println("Initializing server with PrivacyManager")
 	return &models.Server{PrivacyManager: pm}
 }
 
@@ -19,16 +20,21 @@ func Start(s *models.Server) error {
 
 	// Register routes and pass the Server instance
 	r.POST("/check-sanction", func(c *gin.Context) {
+		log.Println("Handling check sanction request")
 		controller.HandleCheckSanction(c, s)
 	})
 
 	r.POST("/generate-stealth", func(c *gin.Context) {
+		log.Println("Handling generate stealth account request")
 		controller.GenerateStealthAccount(c, s)
 	})
 
-	r.GET("/generate-account", controller.GenerateAccount)
-
+	r.GET("/generate-account", func(c *gin.Context) {
+		log.Println("Handling generate account request")
+		controller.GenerateAccount(c)
+	})
 	r.POST("/recover-stealth-priv-key", func(c *gin.Context) {
+		log.Println("Handling recover stealth private key request")
 		controller.RecoverStealthPrivKey(c, s)
 	})
 	// Start server
@@ -36,6 +42,6 @@ func Start(s *models.Server) error {
 	if port == "" {
 		port = "8080"
 	}
-	log.Println("Server running on port:", port)
+	log.Printf("Server running on port: %s\n", port)
 	return r.Run(":" + port)
 }
