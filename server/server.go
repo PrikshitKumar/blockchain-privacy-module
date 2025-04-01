@@ -25,6 +25,8 @@ func Start(s *models.Server) error {
 	r.POST("/generate-stealth", func(c *gin.Context) {
 		controller.GenerateStealthAccount(c, s)
 	})
+
+	r.GET("/generate-account", controller.GenerateAccount)
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
