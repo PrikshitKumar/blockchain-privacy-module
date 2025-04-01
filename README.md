@@ -164,3 +164,9 @@ In this context:
 - Verify that all endpoints return expected JSON responses.
 - Check server logs for detailed error reporting if issues arise.
 
+---
+
+## References Used: 
+1. https://eips.ethereum.org/EIPS/eip-5564
+2. https://research.csiro.au/blockchainpatterns/general-patterns/stealth-address/
+3. https://chainstack.com/stealth-addresses-blockchain-transaction-privacy/
