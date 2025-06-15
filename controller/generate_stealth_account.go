@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/hex"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -53,13 +52,15 @@ func GenerateStealthAccount(c *gin.Context, s *models.Server) {
 
 	// Convert keys to hex format
 	stealthPubHex := "0x" + hex.EncodeToString(crypto.FromECDSAPub(stealthPub))
-	ephemeralPrivHex := "0x" + fmt.Sprintf("%064s", common.Bytes2Hex(crypto.FromECDSA(ephemeralPriv)))
+	ephemeralPubHex := "0x" + hex.EncodeToString(crypto.FromECDSAPub(&ephemeralPriv.PublicKey))
+
+	log.Println("stealthPub from Sender (Debug - 1): ", stealthPub)
 
 	log.Println("Returning stealth account details")
 
 	// Return the generated keys as response
 	c.JSON(http.StatusOK, gin.H{
-		"stealth_pub_key":    stealthPubHex,
-		"ephemeral_priv_key": ephemeralPrivHex,
+		"stealth_pub_key":   stealthPubHex,
+		"ephemeral_pub_key": ephemeralPubHex,
 	})
 }

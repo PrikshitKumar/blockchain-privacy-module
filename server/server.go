@@ -33,6 +33,11 @@ func Start(s *models.Server) error {
 		controller.RecoverStealthPrivKey(c, s)
 	})
 
+	r.POST("/verify-stealth-keys", func(c *gin.Context) {
+		log.Println("Handling verify stealth keys request")
+		controller.VerifyStealthKeys(c, s)
+	})
+
 	r.POST("/sanctions/add", func(c *gin.Context) {
 		log.Println("Handling add sanction request")
 		controller.HandleAddSanctionedAddress(c, s)

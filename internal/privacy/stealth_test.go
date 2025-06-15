@@ -87,6 +87,7 @@ func TestRecoverStealthPrivateKey(t *testing.T) {
 
 	// Generate a stealth address using recipient's public key
 	stealthPub, ephemeralPrivKey, err := pm.GenerateStealthAddress(&recipientPrivKey.PublicKey)
+	fmt.Println("recipientPrivKey.PublicKey from Test (Debug 1): ", recipientPrivKey.PublicKey)
 	assert.NoError(t, err)
 	assert.NotNil(t, stealthPub)
 	assert.NotNil(t, ephemeralPrivKey)
