@@ -1,8 +1,8 @@
-# Chameleon Privacy Module
+# Blockchain Privacy Module
 
 ## Overview
 
-The **Chameleon Privacy Module** is a privacy-focused module that provides stealth address functionality and sanction list management. It allows users to:
+The **Blockchain Privacy Module** is a privacy-focused module that provides stealth address functionality and sanction list management. It allows users to:
 
 - **Generate stealth accounts** using elliptic-curve cryptography (ECDH).
 - **Recover stealth private keys** for the recipient.
@@ -37,8 +37,8 @@ To run the project, make sure you have the following installed:
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/PrikshitKumar/chameleon-privacy-module
-   cd chameleon-privacy-module
+   git clone https://github.com/PrikshitKumar/blockchain-privacy-module
+   cd blockchain-privacy-module
    ```
 
 2. **Install dependencies**:

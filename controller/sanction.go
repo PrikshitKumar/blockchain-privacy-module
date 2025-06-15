@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prikshit/chameleon-privacy-module/models"
+	"github.com/prikshit/blockchain-privacy-module/models"
 )
 
 // HandleAddSanctionedAddress adds a new address to the sanctioned list.

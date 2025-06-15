@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/prikshit/chameleon-privacy-module/internal/sanctions"
+	"github.com/prikshit/blockchain-privacy-module/internal/sanctions"
 	"github.com/stretchr/testify/assert"
 )
 

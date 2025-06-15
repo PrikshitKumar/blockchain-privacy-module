@@ -1,4 +1,4 @@
-module github.com/prikshit/chameleon-privacy-module
+module github.com/prikshit/blockchain-privacy-module
 
 go 1.23.6
 

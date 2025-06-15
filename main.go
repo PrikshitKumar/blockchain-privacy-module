@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/prikshit/chameleon-privacy-module/internal/privacy"
-	"github.com/prikshit/chameleon-privacy-module/internal/sanctions"
-	"github.com/prikshit/chameleon-privacy-module/server"
+	"github.com/prikshit/blockchain-privacy-module/internal/privacy"
+	"github.com/prikshit/blockchain-privacy-module/internal/sanctions"
+	"github.com/prikshit/blockchain-privacy-module/server"
 )
 
 func main() {

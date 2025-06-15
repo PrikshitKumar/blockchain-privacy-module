@@ -7,7 +7,7 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/prikshit/chameleon-privacy-module/internal/sanctions"
+	"github.com/prikshit/blockchain-privacy-module/internal/sanctions"
 
 	"github.com/ethereum/go-ethereum/crypto"
 )

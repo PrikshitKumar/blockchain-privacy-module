@@ -8,7 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gin-gonic/gin"
-	"github.com/prikshit/chameleon-privacy-module/models"
+	"github.com/prikshit/blockchain-privacy-module/models"
 )
 
 // Recovers the Private Key which can regenarate the Public Key and Address (Created by Payer) (By Receipient)

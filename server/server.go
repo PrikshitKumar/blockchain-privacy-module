@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prikshit/chameleon-privacy-module/controller"
-	"github.com/prikshit/chameleon-privacy-module/internal/privacy"
-	"github.com/prikshit/chameleon-privacy-module/models"
+	"github.com/prikshit/blockchain-privacy-module/controller"
+	"github.com/prikshit/blockchain-privacy-module/internal/privacy"
+	"github.com/prikshit/blockchain-privacy-module/models"
 )
 
 func NewServer(pm *privacy.PrivacyManager) *models.Server {
