@@ -60,6 +60,7 @@ To run the project, make sure you have the following installed:
 1. **Build and start the server**:
 
    ```bash
+   go build
    go run main.go
    ```
 
